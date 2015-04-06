@@ -61,7 +61,6 @@ func GetDBSession() (*mgo.Session, error) {
 // need index in collection over activationid and email/deletedat (_id is intrinsic)
 
 // mongodb OPS http://info.mongodb.com/rs/mongodb/images/10gen-MongoDB_Operations_Best_Practices.pdf
-
 // https://github.com/apexskier/httpauth/blob/master/mongoBackend.go
 
 func GetPlayerByEmail(email string) (p player.Player, e error) {
