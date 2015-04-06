@@ -1,0 +1,71 @@
+
+Petre,
+
+Niže je neka osnovna razrada i troškovnik:
+
+backend instance servera - procjena troškova infrastrukture
+-----------------------------------------------------------
+
+api - server gdje se vrti servis na kojeg se spajaju klijenti i koji kontrolira igru i tok podataka između igrača, regidtraciju, login, session management itd. (tu možemo staviti i web)
+monitoring - vizualizacija, alerting, central log, puppet ili ansible ili juju i ostale popratne aplikacije
+mongo - key/value baza
+
+Amazon nije najjeftiniji, ali pruža najbolje mogućnosti za scaling u svemu (disk, CPU, mreža, autoscale toolovi, nadzor..) do praktički u beskonačno. Npr cijeli netflix je na Amazonu.
+
+Tu još ne govorimo o DNS priči, jer DNS pruža ogromne mogućnosti failovera, balansiranja, preusmjeravanja po regijama za minimalni latency itd. Ne znam još koja regija svijeta bi bila glavni target pa sam uzeo EU koa tržiše i smjestio servere u Frankfurt (po tim cijenama koje su malo veće od ostalih regija izuzev Japana)
+
+Development faza i testing/staging
+Imamo dvije opcije:
+ 1. sve vrtimo u uredu na jednom računalu
+ 2. sve vrtimo na jednom serveru na amazonu u regiji koja nam odgovara
+
+Opcija 1 je besplatna opcija 2. je besplatna godinu dana, ali uvijek dostupna izvana kome damo pristup.
+U obje situacije volio bih da se odmah uspostavi deployment proces, pa je svejedno gdje se nalazi server.
+Za početak smo u uredu, ali prije ili kasnije bi morali otvoriti account na amazonu.
+
+Stress testing
+U ovoj fazi na kratko vrijeme (par dana) moramo imati near production okruženje da se testiraju realni uvjeti.
+
+Za to imamo početno tri instance:
+1. MongoDB database m3.medium ($0.083 per Hour)
+2. web/api server c4.large ($0.148 per Hour)
+3. monitoring  m3.medium ($0.083 per Hour) 
+
+4. t2.micro simulacija klijenata (1-10 komada ovisno o testu) $0.015 per Hour
+
+S 10 klijenata možemo simulirati ~600000 paralelnih konekcija.
+To će ukazati na eventualna uska grla prema bazi pa bih kroz test pronašao "sweet" spot da znamo kad treba dalje horizontalno skalirati bazu, a kad api servere.
+
+
+Procjena je za 7 dana sa 5 klijenata ukupno ~$65
+
+Produkcija - inicijalna ali spremna za scaling prema nekim mojim osnovnim osjećajem. Može ispasti i manje.
+2 x mongo baza u replicasetu (m3.large) (2 X $0.166 per Hour)
+1 x nadzor (m3.medium) ($0.083 per Hour)
+2 x api (c4.large) (2 X $0.148 per Hour)
+
+Promet (data transfer) - ako trošimo do 10TB mjesečno cijena je trenutno 0.09 po GB
+Npr 5TBbyte prometa mjesečno ~ $460 (mislim da je ovo OK i previše jer nemamo klasičnu dinamičnu web aplikaciju.. samo putuju gzipani jsoni)
+Naplaćuje se samo outgoing promet sa servera prema internetu. Upload je besplatan.
+
+FYI - Supersport koji ima dinamičnu web stranicu koja se stalno mijenja troši oko 16TB mjesečno i ima oko 300000 registriranih usera.
+
+Mjesečna procjena inicijalne produkcije:
+Instance mjesečno ~ $510
+Promet mjesečni (5TB) ~ $460
+Ukupno: ~ $970
+
+Ovo se da smanjiti sa reserved instancama upola, ali se obvezujemo na 1,3 ili 5 godina. To možemo razmotriti kad dođe vrijeme za to.
+
+Ukoliko je previše imam opciju da smanjim trošak kroz arhitekturu, ali s nekim svjesnim slabostima (1 DB server, 1 api server sve skupa manje instance, prelazak na docker itd)
+
+
+Eto nadam se da ti pomaže donekle. Sve sugestije i primjedbe primam.
+
+Vremensku procjenu ti pošaljem idući tjedan.
+
+Hvala na strpljenju,
+Goran
+
+
+
